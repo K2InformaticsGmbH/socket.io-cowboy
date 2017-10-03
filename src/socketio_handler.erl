@@ -63,7 +63,7 @@ init(Req, [Config]) ->
                             {ok, Req2, #state{action = ok, config = Config, sid = Sid}};
                         {error, _} ->
                             Req1 = cowboy_req:reply(404, #{}, <<>>, Req),
-                            {shutdown, Req1, #state{action = error, config = Config, sid = Sid}}
+                            {ok, Req1, #state{action = error, config = Config, sid = Sid}}
                     end;
                 {{error, not_found}, _} ->
                     Req1 = cowboy_req:reply(404, #{}, <<>>, Req),
@@ -145,12 +145,12 @@ safe_poll(Req, HttpState = #state{config = Config = #config{protocol = Protocol}
                 {cowboy_loop, Req, HttpState};
             _ ->
                 Req1 = reply_messages(Req, Messages, Config, true),
-                {ok, Req1, HttpState}
+                {stop, Req1, HttpState}
         end
     catch
         exit:{noproc, _} ->
             RD = cowboy_req:reply(200, text_headers(), Protocol:encode(disconnect), Req),
-            {ok, RD, HttpState#state{action = disconnect}}
+            {stop, RD, HttpState#state{action = disconnect}}
     end.
 
 %% Websocket handlers
