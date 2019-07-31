@@ -55,16 +55,11 @@ init(Req, [Config]) ->
                     end;
                 {{ok, Pid}, <<"POST">>} ->
                     Protocol = Config#config.protocol,
-                    case cowboy_req:read_body(Req) of
-                        {ok, Body, Req1} ->
-                            Messages = Protocol:decode(Body),
-                            socketio_session:recv(Pid, Messages),
-                            Req2 = cowboy_req:reply(200, text_headers(), <<>>, Req1),
-                            {ok, Req2, #state{action = ok, config = Config, sid = Sid}};
-                        {error, _} ->
-                            Req1 = cowboy_req:reply(404, #{}, <<>>, Req),
-                            {ok, Req1, #state{action = error, config = Config, sid = Sid}}
-                    end;
+                    {ok, Body, Req1} = read_req_body(Req),
+                    Messages = Protocol:decode(Body),
+                    socketio_session:recv(Pid, Messages),
+                    Req2 = cowboy_req:reply(200, text_headers(), <<>>, Req1),
+                    {ok, Req2, #state{action = ok, config = Config, sid = Sid}};
                 {{error, not_found}, _} ->
                     Req1 = cowboy_req:reply(404, #{}, <<>>, Req),
                     {ok, Req1, #state{action = not_found, sid = Sid, config = Config}};
@@ -103,7 +98,9 @@ terminate(_Reason, _Req, _HttpState = #state{heartbeat_tref = HeartbeatTRef, pid
             ok;
         _ ->
             erlang:cancel_timer(HeartbeatTRef)
-    end.
+    end;
+terminate(_Reason, _Req, _HttpState) ->
+    ok.
 
 text_headers() ->
     #{<<"content-type">> => <<"text/plain; charset=utf-8">>,
@@ -199,4 +196,14 @@ reply_ws_messages(Messages, #state{config = #config{protocol = Protocol}} = Stat
             {ok, State};
         Packet ->
             {reply, {text, Packet}, State}
+    end.
+
+read_req_body(Req) ->
+    read_req_body(Req, <<>>).
+read_req_body(Req0, Acc) ->
+    case cowboy_req:read_body(Req0) of
+        {ok, Data, Req} ->
+            {ok, << Acc/binary, Data/binary >>, Req};
+        {more, Data, Req} ->
+            read_req_body(Req, << Acc/binary, Data/binary >>)
     end.
