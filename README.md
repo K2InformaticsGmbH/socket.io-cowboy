@@ -4,6 +4,7 @@ socket.io-cowboy
 ### Overview
 
 [![Build Status](https://travis-ci.com/K2InformaticsGmbH/socket.io-cowboy.svg?branch=master)](https://travis-ci.com/K2InformaticsGmbH/socket.io-cowboy)
+[![Coverage Status](https://coveralls.io/repos/github/K2InformaticsGmbH/socket.io-cowboy/badge.svg?branch=master)](https://coveralls.io/github/K2InformaticsGmbH/socket.io-cowboy?branch=master)
 
 This project is an open-source Erlang implementation of [Socket.IO](http://socket.io/) server. Based on [Cowboy](https://github.com/extend/cowboy).
 
