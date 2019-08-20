@@ -1,3 +1,14 @@
+sudo: true
+dist: trusty
+install:
+  - wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
 language: erlang
+dist: trusty
 otp_release:
-   - R16B
+  - 22
+script:
+  - ./rebar3 compile
+  - ./rebar3 eunit
+  - ./rebar3 cover
+  - ./rebar3 as test coveralls send
+
